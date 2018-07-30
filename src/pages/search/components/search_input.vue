@@ -25,35 +25,27 @@ export default {
   methods: {
     querySearch:async function(queryString,cb) {
         await this.request(queryString); //异步请求
-        let prompts = this.prompts;//
-        console.log(prompts)
-        var result = [];
-        prompts.forEach((item,index)=>{
-            result[index] = {};
-            result[index].value = item.value;    //属性名必须是value
-        })
-        console.log(result)
+        let prompts = this.prompts;
         this.prompts=[];
         cb(prompts);
     },
-    createFilter(queryString) {
-        return (prompt) => {
-            return (prompt.value.toLowerCase().indexOf(queryString.toLowerCase()) === 0);
-        };
-    },
     submit: function() {
-        //API调用
         var point = this.getParam();//获得用户的输入
-        window.location.href = this.setUrl(point);
+        this.flyTo(point);
+    },
+    flyTo:function(point){
+        //调用API
+        // new Camera()
+        // earth.flyTo(point)
     },
     getParam: function() {
-        return this.inputValue || 'http//:www.baidu.com';
+        return [120.775034,31.28465,1000] ;
     },
-    setUrl: function(point) {
-        var rootUrl = "/search";
-        var url = rootUrl+"?" + "q=" + point;
-        return url;
-    },
+    // setUrl: function(point) {
+    //     var rootUrl = "/search";
+    //     var url = rootUrl+"?" + "q=" + point;
+    //     return url;
+    // },
     request:async function(queryString){                  //请求数据
         const url = 'http://10.10.10.89:8080/search.php?q='+queryString+'&format=json'
         const res = await fetch(url);

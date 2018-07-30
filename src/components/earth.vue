@@ -15,6 +15,7 @@ export default {
         projection: "EPSG:900913"
       }
     ).addTo(earth.layers);
+    
   }
 };
 </script>
