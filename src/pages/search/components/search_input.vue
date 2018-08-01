@@ -6,76 +6,125 @@
             :fetch-suggestions="querySearch"
             placeholder="请输入内容"
             :trigger-on-focus="false"   
-            @keyup.enter="submit"
+            @keyup.enter.native="submit"
+            @select = 'submit'
             >                              
-        </el-autocomplete> 
-        <input class="search-btn" @click="submit" type="button" value="搜索">
+        </el-autocomplete>
+        <span class="iconfont search-btn" @click="submit">&#xe632;</span>
     </div>
 </template>
 
 <script>
+import EarthTool from "./earth_tool"
 export default {
   name: "SearchInput",
   data() {
     return {
-        prompts: [],
+        prompts:[],        //用作存储后台数据的仓库，使得本组件的每个方法都能取
         inputValue: "",
     };
   },
   methods: {
     querySearch:async function(queryString,cb) {
-        await this.request(queryString); //异步请求
-        let prompts = this.prompts;
-        this.prompts=[];
-        cb(prompts);
+        this.prompts=[];    //每次change之后把之前的仓库清空
+        this.prompts=await this.request(queryString); //异步请求将数据放进仓库
+        cb(this.prompts);
     },
     submit: function() {
-        var point = this.getParam();//获得用户的输入
-        this.flyTo(point);
+        util.clearPolygon();//先清除边界和marker
+        var point = this.getParam();//获得用户输入的location和polygonpoints、name
+        console.log(point.polygonpoints)
+        if(!point)  {//如果用户什么都没有输入
+            console.log('请稍等')
+            return 0;  
+        }
+        var lineStyle = {
+            fillColor:"#512da8",
+            outlineColor:"#00acc1",
+        }
+        //相机飞到目标点并划线描点
+        this.flyTo(point,lineStyle);
+        console.log('submit成功')
     },
-    flyTo:function(point){
-        //调用API
-        // new Camera()
-        // earth.flyTo(point)
+    flyTo:function(point,lineStyle){
+        util.polygonpointsToVector2(point.polygonpoints)//用于fromPoints(vector)
+        var bd = this.fromPoints(point.polygonpoints);                                //得到BoudingRectangle
+        console.log(bd);
+        var polygon = util.setLine(point.polygonpoints,lineStyle);        //划线
+        var marker = util.setMarker(point.location,point.name)                 //描点
+        earth.camera.flyTo({                                                   //飞到目标
+            destination:GeoVis.Rectangle.fromDegrees(bd.x,bd.y,bd.x+bd.width,bd.y+bd.height),
+        });
+        console.log('飞行成功')
     },
-    getParam: function() {
-        return [120.775034,31.28465,1000] ;
+    getParam: function() {          //从prompts中获取用户输入的地点坐标{location:[a,b],polygonpoints:[[a,b],[b,c],...]}
+        let len = this.prompts.length;
+        let i = 0;
+        for(i = 0;i<len;i++){
+            if(this.prompts[i].value.indexOf(this.inputValue)!==-1){//匹配用户输入
+                console.log('getParam成功')
+                return {
+                    location: this.prompts[i].location,
+                    polygonpoints:this.prompts[i].polygonpoints,
+                    name:this.prompts[i].value,
+                }
+            }
+        }
+        //如果用户的输入全都没有匹配到但是有数据，就返回第一个
+        if(i===len){
+            if(this.prompts.length!==0){
+                return {
+                    location:this.prompts[0].location,
+                    polygonpoints:this.prompts[0].polygonpoints
+                }
+            } 
+            //如果用户什么都没有输入或者无数据
+            else return false;
+        }
     },
-    // setUrl: function(point) {
-    //     var rootUrl = "/search";
-    //     var url = rootUrl+"?" + "q=" + point;
-    //     return url;
-    // },
+    fromPoints:function(positions){
+       return GeoVis.BoundingRectangle.fromPoints(positions)
+       console.log('fromPoints成功')
+    },
     request:async function(queryString){                  //请求数据
-        const url = 'http://10.10.10.89:8080/search.php?q='+queryString+'&format=json'
-        const res = await fetch(url);
-        const json = await res.json();
-        // console.log(json)
-        // 将json_display_name处理为[
-        //     {display_name:['xx','xx','xx','xx',...], place_id:"xxx"}
+        let json = await util.getData(queryString,'polygon_geojson') //请求polygon_geojson格式数据
+        console.log('请求成功')
+        // 将place处理为[
+        //     {display_name:['xx','xx','xx','xx',...],     
+        //     place_id:"xxx",polygonpoints:[[a,b],[c,d],...]}
         //     '''
         //     ...
         // ]
-        const json_display_name = [];         
+        const place = [];    
         json.forEach((item,index) => {
-            json_display_name[index]={};                               
-            json_display_name[index].display_name = item.display_name//.split(','); 
-            json_display_name[index].place_id = item.place_id;
-        }); 
-        //prompts=[
-        //    {value:'XXX',place_id:'XXX'},
-        //    ....
-        //    ....
-        //]
-        json_display_name.forEach((item,index) => {
-            this.prompts[index]={};   
-            this.prompts[index].value = item.display_name//[0]; 
-            this.prompts[index].place_id = item.place_id;
-        }); 
-        // json_display_name[index].display_name.filter((item,index)=>{
-        //     return item.indexOf(queryString)===0;
-        // });
+            place[index]={};                               
+            place[index].value = item.display_name; 
+            place[index].place_id = item.place_id;
+            place[index].location = [Number(item.lon),Number(item.lat)];
+            if(item.geojson.type==='MultiPolygon'){
+                place[index].polygonpoints = item.geojson.coordinates[0][0];
+                console.log('MultiPolygon')
+            }
+            if(item.geojson.type==='LineString'){
+                place[index].polygonpoints = item.geojson.coordinates;
+                console.log('LineString')
+            }
+            if(item.geojson.type==='Polygon'){
+                place[index].polygonpoints = item.geojson.coordinates[0];
+                console.log('PolygonP')
+            }
+            if(item.geojson.type==='Point'){
+                place[index].polygonpoints=[item.geojson.coordinates,item.geojson.coordinates];
+                console.log('Point')
+            }
+            else{
+                console.log('其他???')
+            }      
+        });
+        console.log("json处理成功")
+        return place;
     },
+   
   }
 };
 </script>
@@ -114,6 +163,7 @@ export default {
     background: #0097a7cc;
     height: 40px;
     line-height: 40px;
-    font-size: 2rem;
+    font-size: 3rem;
+    cursor:pointer
 }
 </style>
