@@ -13,27 +13,51 @@
         <span class="iconfont search-btn" @click="submit">&#xe632;</span>
     </div>
 </template>
-
 <script>
+import util from "./util"
 import EarthTool from "./earth_tool"
 export default {
   name: "SearchInput",
+  props:{
+    url:{
+        type:String,
+        default:"https://nominatim.openstreetmap.org"
+    },
+    format:{
+        type:String,
+        default:'json'
+    },
+    dataType:{
+        type:String,
+        default:'polygon_geojson'
+    }
+  },
   data() {
     return {
         prompts:[],        //用作存储后台数据的仓库，使得本组件的每个方法都能取
         inputValue: "",
+        queryUrl:this.url,
+        queryFormat:this.format,
+        queryDataType:this.dataType,
     };
   },
   methods: {
     querySearch:async function(queryString,cb) {
         this.prompts=[];    //每次change之后把之前的仓库清空
+        cb([{value:'请稍等...'}])
+        console.log(this.queryUrl);
         this.prompts=await this.request(queryString); //异步请求将数据放进仓库
+        if(this.prompts.length===0){
+            cb([{value:'无数据...'}]);
+            return;
+        }
+        console.log(this.prompts.length)
         cb(this.prompts);
     },
-    submit: function() {
+    submit: function(){
         util.clearPolygon();//先清除边界和marker
         var point = this.getParam();//获得用户输入的location和polygonpoints、name
-        console.log(point.polygonpoints)
+        // console.log(point.polygonpoints)
         if(!point)  {//如果用户什么都没有输入
             console.log('请稍等')
             return 0;  
@@ -50,10 +74,14 @@ export default {
         util.polygonpointsToVector2(point.polygonpoints)//用于fromPoints(vector)
         var bd = this.fromPoints(point.polygonpoints);                                //得到BoudingRectangle
         console.log(bd);
+        var x=(bd.width===0?bd.x-0.005:bd.x);
+        var y=(bd.height===0?bd.y-0.005:bd.y);
+        var width=(bd.width===0?0.01:bd.width);
+        var height=(bd.height===0?0.01:bd.height);
         var polygon = util.setLine(point.polygonpoints,lineStyle);        //划线
         var marker = util.setMarker(point.location,point.name)                 //描点
         earth.camera.flyTo({                                                   //飞到目标
-            destination:GeoVis.Rectangle.fromDegrees(bd.x,bd.y,bd.x+bd.width,bd.y+bd.height),
+            destination:GeoVis.Rectangle.fromDegrees(x,y,x+width,y+height),
         });
         console.log('飞行成功')
     },
@@ -86,8 +114,10 @@ export default {
        return GeoVis.BoundingRectangle.fromPoints(positions)
        console.log('fromPoints成功')
     },
-    request:async function(queryString){                  //请求数据
-        let json = await util.getData(queryString,'polygon_geojson') //请求polygon_geojson格式数据
+    request:async function(placeName){                  //请求数据
+        let url = `${this.queryUrl}/search.php?q=${placeName}&format={this.queryFormat}&${this.queryDataType}=1`;
+        // let url = that.queryUrl+"/search.php?format=json&polygon_geojson=1&q="+placeName;
+        let json = await util.getData(url) //请求polygon_geojson格式数据
         console.log('请求成功')
         // 将place处理为[
         //     {display_name:['xx','xx','xx','xx',...],     
@@ -103,22 +133,22 @@ export default {
             place[index].location = [Number(item.lon),Number(item.lat)];
             if(item.geojson.type==='MultiPolygon'){
                 place[index].polygonpoints = item.geojson.coordinates[0][0];
-                console.log('MultiPolygon')
+                console.log(item.display_name+'1MultiPolygon')
             }
-            if(item.geojson.type==='LineString'){
+            else if(item.geojson.type==='LineString'){
                 place[index].polygonpoints = item.geojson.coordinates;
-                console.log('LineString')
+                console.log(item.display_name+'LineString')
             }
-            if(item.geojson.type==='Polygon'){
+            else if(item.geojson.type==='Polygon'){
                 place[index].polygonpoints = item.geojson.coordinates[0];
-                console.log('PolygonP')
+                console.log(item.display_name+'Polygon')
             }
-            if(item.geojson.type==='Point'){
+            else if(item.geojson.type==='Point'){
                 place[index].polygonpoints=[item.geojson.coordinates,item.geojson.coordinates];
-                console.log('Point')
+                console.log(item.display_name+'Point')
             }
             else{
-                console.log('其他???')
+                console.log('其他'+item.display_name+item.geojson.type)
             }      
         });
         console.log("json处理成功")

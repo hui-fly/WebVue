@@ -26,4 +26,7 @@ export default {
     .container{
         height: 100%;
     }
+    .inputclass{
+        top: 0rem;
+    }
 </style>
