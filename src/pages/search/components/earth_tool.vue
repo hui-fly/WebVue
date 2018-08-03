@@ -1,12 +1,10 @@
 <template>
-    <div class="earth-tool">
+    <div class="earth-tool-container">
       <span v-for="(item,index) in list" 
             :class="[{'active':ind===index},iconfont,item.className]" 
             @click='method(item.className)'
-            @mouseover='iconOver(index)'@mouseout='iconOut(index)'
+            @mouseover='iconOver(index)' @mouseout='iconOut(index)'
        ></span>
-      <!-- <span :class="[iconfont add icon-add1]" @click='zoomIn'></span>
-      <span :class="[iconfont jianhao icon-jianhao]" @click='zoomOut'></span> -->
     </div>
 </template>
 <script>
@@ -41,7 +39,7 @@ export default {
     },
     iconOut:function(index){
     	this.ind=-1;
-    }
+    },
   },
   mounted(){   //这里将变量加载到全局
   	window.marker = 0
@@ -53,7 +51,7 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-    .earth-tool{
+    .earth-tool-container{
       position: absolute;
       display: inline-block;
       left: 4rem;

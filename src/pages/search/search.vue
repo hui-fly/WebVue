@@ -3,13 +3,15 @@
     <v-earth/>
     <earth-tool></earth-tool>
     <search-input></search-input>
+    <camera></camera>
   </div>
 </template>
 
 <script>
 import Earth from "../../components/earth";
 import SearchInput from "./components/search_input";
-import EarthTool from "./components/earth_tool"
+import EarthTool from "./components/earth_tool";
+import Camera from './components/camera'
 const GeoVis = window.GeoVis;
 export default {
   name: "Search",
@@ -17,6 +19,7 @@ export default {
     "v-earth":Earth,
     "SearchInput":SearchInput,
     "EarthTool":EarthTool,
+    "Camera":Camera,
   },
 };
 </script>

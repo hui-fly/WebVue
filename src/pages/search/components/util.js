@@ -15,11 +15,11 @@ var util = {
     clearPolygon:function(){
       if(polygon){
           polygon.removeFrom(earth.features);
-            console.log('polygon清除');
+          console.log('polygon清除');
       }
       if(marker){
           marker.removeFrom(earth.features);
-        console.log('marker清除');
+          console.log('marker清除');
       }
       window.marker = 0;
       window.polygon = 0;//为了在用户点击home时不报错
