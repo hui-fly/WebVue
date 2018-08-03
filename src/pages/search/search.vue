@@ -1,5 +1,5 @@
 <template>
-  <div class="container">
+  <div class="search-container">
     <v-earth/>
     <earth-tool></earth-tool>
     <search-input></search-input>
@@ -26,7 +26,7 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-    .container{
+    .search-container{
         height: 100%;
     }
     .inputclass{

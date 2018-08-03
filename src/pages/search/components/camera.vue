@@ -1,22 +1,19 @@
 <template>
   <div class="camera-container">
-      <span @mouseover='iconOver'
-            @mouseout='iconOut'
-            @click="cameraOpen"
-            :class="[{'hover':isHover},iconfont,iconXiangji,camera]"
-            ></span>
-      <div class="cameraMenu" v-if='isShow'>
+      <span @click="cameraOpen" class="camera">
+          <a class="iconfont icon-xiangji1"></a>
+      </span>
+      <div class="camera-menu" v-if='isShow'>
+          <p class="tip">选择您需要的分辨率</p>
           <ul>
               <li v-for="(item,index) in list" 
-                  :class="[{'hover':hoverIndex===index},{'active':activeIndex===index},cameraMenuItem]" 
-                  @mouseover='itemOver(index)'
-                  @mouseout="itemOut(index)"
-                  @click="menuItem(index)"
-              >{{item.width+" X "+item.height}}</li>
+                  class="camera-menu-item" 
+                  @click='menuItem(index)'
+              ><a class="a-item">{{item.width+" X "+item.height}}</a></li>
           </ul>
-          <div class="cameraBtnContainer">
-              <button class="btn confirm" @click="screenShot">确定</button>
-              <button class="btn cancel" @click="cameraClose">取消</button>
+          <div class="camera-btn-container">
+              <a class="btn confirm" @click="screenShot">确定</a>
+              <a class="btn cancel" @click="cameraClose">取消</a>
           </div>
       </div>
   </div>
@@ -43,13 +40,6 @@ export default {
               height:750,
           },
           isShow:false,
-          activeIndex:'',
-          hoverIndex:'',
-          isHover:false,
-          iconfont:'iconfont',
-          cameraMenuItem:'cameraMenuItem',
-          camera:'camera',
-          iconXiangji:'icon-xiangji1',
       }
   },
   methods:{
@@ -64,76 +54,88 @@ export default {
       screenShot:function(){//截屏
           console.log("确定")
           this.setCanvas();      //设置canvas
+          this.html2canvas();
+      },
+      html2canvas:function(){
+          html2canvas(earth._container).then(canvas=>{
+              document.body.appendChild(canvas);
+              container.style.width = "100%";
+              container.style.height = "100%";
+              canvas.style.width = "100%";
+              canvas.style.height = "100%";
+              earth.handleResize();
+          })
       },
       menuItem:function(index){//选择分辨率
-          this.activeIndex = index;
           this.width=this.list[index].width;
           this.height=this.list[index].height;
           console.log(this.width)
       },
       setCanvas:function(){
-          
+          let container=document.getElementById('container')
+          console.log(container)
+          console.log(container.style.width,container.style.height)
+          const width=this.width+'px';
+          const height=this.height+'px';
+          container.style.width = width;
+          container.style.height = height;
+          earth.handleResize();
+          console.log(container.style.width,container.style.height)
       },
-      itemOver:function(index){
-    	  this.hoverIndex=index;
-      },
-      itemOut:function(index){
-          this.hoverIndex=-1;
-      },
-      iconOver:function(){
-          this.isHover=true;
-      },
-      iconOut:function(){
-          this.isHover=false;
-      }
   }
 };
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-  .camera-container{
-      position: absolute;
-      top:0;
-  }
   .camera{
       position: absolute;
       color: aliceblue;
-      font-size: 3rem;
       display: inline-block;
       left: 2.5rem;
       top:2rem;
   }
-  .camera.hover{
+  .icon-xiangji1{
+      font-size: 3rem;
+      color: #fff;
+  }
+  .icon-xiangji1:hover{
       color: #999;
   }
-  .cameraMenu{
-      position: relative;
+  .camera-menu{
+      position: absolute;
       overflow: hidden;
-      top:10rem;
-      left: 30rem;
-      width:20rem;
-      height: 18rem;
+      top:50%;
+      left: 50%;
+      transform: translate(-50%,-50%);
+      width:50%;
+      height: 45%;
       z-index:2000;
       background: aliceblue;
+  }
+  .tip{
+      font-size: 1.8rem;
+      margin-top: 1.8rem;
+      margin-left: 1.8rem;
   }
   ul{
       margin-top: 1.5rem;
       margin-left: 3rem;
   }
-  .cameraMenuItem{
+  .camera-menu-item{
       font-size: 1.5rem;
       line-height: 2.2rem;
       letter-spacing: 3px;
       cursor: pointer;
   }
-  .cameraMenuItem.hover{
-      color: #999;
+  .a-item:active{
+      color:darkgoldenrod;
   }
-  .cameraMenuItem.active{
-      color: cornflowerblue;
+  a:visited{
+      color: darkgoldenrod;
   }
-  .cameraBtnContainer{
+  
+  .camera-btn-container{
       position: absolute;
       bottom: 2rem;
       width: 100%;
@@ -146,5 +148,12 @@ export default {
       line-height: 2rem;
       border: none;
       padding: 0 0.5rem;
+      cursor: pointer;
+  }
+  .confirm:active{
+      color: #999;
+  }
+  .cancel:active{
+      color:#999;
   }
 </style>

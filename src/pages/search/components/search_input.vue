@@ -1,5 +1,5 @@
 <template>
-    <div class="search-container">
+    <div class="search-input-container">
         <el-autocomplete
             class="search-input"
             v-model="inputValue"
@@ -161,7 +161,7 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only 如果用element不能加scoped-->
 <style>
-.search-container {
+.search-input-container {
     display: inline-block;
     position: absolute;
     color: #fff;
