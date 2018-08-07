@@ -89,9 +89,12 @@ export default {
         let btn =document.getElementsByClassName('btn')[0]
         setTimeout(()=>{
             html2canvas(container).then(canvas=>{
+              // alert(1)
               //截图之后回到初始大小
               container.style.width=this.initSize.width;
               container.style.height=this.initSize.height;
+              // $('#container').height(this.initSize.height)
+              // $('#container').width(this.initSize.width)
               earth.handleResize();
               btn.setAttribute('href',canvas.toDataURL()); 
               btn.setAttribute('download','截图.png');
@@ -109,14 +112,16 @@ export default {
       },
       setContainer:function(){
           let container=document.getElementById('container')
-          console.log(container)
           //先把初始的大小存下来
-          this.initSize.width=container.width;
-          this.initSize.height=container.height;
-          const width=this.width;
-          const height=this.height;
+          this.initSize.width=container.style.width;
+          this.initSize.height=container.style.height;
+          const width=this.width+'px';
+          const height=this.height+'px';
           container.style.width=width;
           container.style.height=height;
+          // $('#container').width(width);
+          // $('#container').height(height);
+          console.log(container)
           earth.handleResize();
       },
   }
@@ -191,5 +196,9 @@ export default {
       border: none;
       padding: 0 0.5rem;
       cursor: pointer;
+  }
+  .setContainerSize{
+    width: 1000px;
+    height: 1000px;
   }
 </style>
