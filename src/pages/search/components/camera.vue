@@ -29,8 +29,6 @@
 
 <script>
 import html2canvas from 'html2canvas';
-import $ from 'jquery'
-import util from 'util';
 const GeoVis = window.GeoVis;
 export default {
   name: "Camera",
