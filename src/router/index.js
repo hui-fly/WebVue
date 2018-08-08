@@ -9,13 +9,13 @@ export default new Router({
   routes: [
     {
       path: '/',
-      name: 'container',
-      component: Container
-    },
-    {
-      path: '/search',
       name: 'search',
       component: Search
+    },
+    {
+      path: '/container',
+      name: 'container',
+      component: Container
     }
   ]
 })

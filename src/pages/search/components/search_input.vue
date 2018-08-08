@@ -14,8 +14,7 @@
     </div>
 </template>
 <script>
-import util from "./util"
-import EarthTool from "./earth_tool"
+import util from "./util";
 export default {
   name: "SearchInput",
   props:{

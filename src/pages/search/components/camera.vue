@@ -54,19 +54,26 @@ export default {
   },
   methods:{
       cameraOpen:function(){
-          var canvasNode=document.getElementById('canvasNode')
-          var btn=document.getElementsByClassName('btn')[0]
+          this.init();
           console.log('打开/关掉相机')
-          if(canvasNode&&canvasNode.childNodes.length>0){
-            canvasNode.removeChild(canvasNode.childNodes[0]);
-            console.log(canvasNode.childNodes.length)
-          }
-          if(btn&&typeof(btn.getAttribute('href'))!==undefined){
-            btn.removeAttribute('href')
-            console.log(typeof(btn.getAttribute('href')))
-          }
           this.canvasShow=false;
           this.isShow=!this.isShow; //打开相机
+      },
+      init:function(){
+        var canvasNode=document.getElementById('canvasNode')
+        let download =document.getElementById('download')
+        if(canvasNode){
+          console.log(canvasNode.childNodes.length)
+        }
+        if(canvasNode&&canvasNode.childNodes.length>0){
+          console.log(canvasNode.childNodes.length)
+          canvasNode.removeChild(canvasNode.childNodes[0]);
+          console.log(canvasNode.childNodes.length)
+        }
+        if(download&&typeof(download.getAttribute('href'))!==undefined){
+          console.log(typeof(download.getAttribute('href')))
+          download.removeAttribute('href')
+        }
       },
       cameraClose:function(){//关掉相机
           console.log("取消")
@@ -80,28 +87,46 @@ export default {
           this.isShow=false;
           this.setContainer();      //设置canvas
           this.canvasShow=true;//必须先渲染出来才能向其插入节点
-          this.html2canvas(); 
+          this.startCapture(); 
+      },
+      startCapture:function(){
+        earth.globe.maximumScreenSpaceError = 1.5;
+            // await sleep(200);
+            console.log(earth.globe.maximumScreenSpaceError)
+            if (earth.globe._surface._lastTileLoadQueueLength === 0) { 
+              console.log(2)
+              setTimeout(() => this.html2canvas(), 200)
+            } else {
+              const that = this;
+              function doHtml2canvas(e){
+                if (e === 0) {
+                  that.html2canvas();
+                  earth.globe.tileLoadProgressEvent.removeEventListener(doHtml2canvas)
+                }
+              }
+              earth.globe.tileLoadProgressEvent.addEventListener(doHtml2canvas)
+            }
       },
       html2canvas:function(){
-        let container = document.getElementById('container')
-        let btn =document.getElementsByClassName('btn')[0]
-        setTimeout(()=>{
-            html2canvas(container).then(canvas=>{
-              // alert(1)
-              //截图之后回到初始大小
+          let container = document.getElementById('container')
+          let download =document.getElementById('download')
+          html2canvas(container).then(canvas=>{
+            //截图之后回到初始大小
               container.style.width=this.initSize.width;
               container.style.height=this.initSize.height;
-              // $('#container').height(this.initSize.height)
-              // $('#container').width(this.initSize.width)
               earth.handleResize();
-              btn.setAttribute('href',canvas.toDataURL()); 
-              btn.setAttribute('download','截图.png');
+              download.setAttribute('href',canvas.toDataURL()); 
+              download.setAttribute('download','截图.png');
               canvas.style.width = "100%";
               canvas.style.height = "100%";
               canvasNode.appendChild(canvas);
               console.log('结束');
-            })
-        },0)
+          })
+          this.init();
+          earth.globe.tileLoadProgressEvent.removeEventListener((e)=>{
+            this.doHtml2canvas(e)
+            console.log('移除')
+          });
       },
       setSize:function(){//选择分辨率
           const size = this.size.split('*');
@@ -119,8 +144,8 @@ export default {
           container.style.height=height;
           // $('#container').width(width);
           // $('#container').height(height);
-          console.log(container)
           earth.handleResize();
+          earth.globe.maximumScreenSpaceError = 1.5;
       },
   }
 };
